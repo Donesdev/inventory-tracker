@@ -1,7 +1,19 @@
+# Inventory Tracker Program
+# Author: Jose Dones
+# This program helps track products that are bought for resale.
+# It allows the user to:
+# 1. Add a new product
+# 2. Record when a product has been sold
+# 3. View a list of products that are still pending sale
+# The program saves product data in CSV files so the information remains stored
+# even after the program is closed.
 import os
 from datetime import datetime as datetime
 import csv
 
+# This function displays the main menu and asks the user to choose
+# an option from 1 to 4. It keeps asking until the user enters
+# a valid menu choice.
 def menu():
     print( """
           MAIN MENU:
@@ -16,6 +28,9 @@ def menu():
             return int(choice)
         print("Please type a valid number option from 1 to 4: ")
 
+    # This function asks the user for a number, such as a cost, shipping amount,
+# or sale price. It removes invalid characters and keeps asking until
+# the user enters a valid dollar amount.
 def get_number(prompt):
     while True:
         p = input(prompt).strip()
@@ -28,6 +43,10 @@ def get_number(prompt):
         except ValueError:
             print("Invalid, please try again. ")
 
+# This function creates the next product ID.
+# If the products file does not exist yet, it starts with P0001.
+# Otherwise, it counts the number of products already saved
+# and creates the next ID in sequence.
 def next_product_id():
     if not os.path.exists("products.csv"):
         return ("P0001")
@@ -36,6 +55,8 @@ def next_product_id():
         count = sum(1 for _ in reader)
     return f'P{count+1:04d}'
 
+    # This function saves a newly added product into products.csv.
+# If the file does not already contain data, it first writes the header row.
 def save_new_product(product_id, date, product, cost, shipping, total):
     exists = os.path.exists('products.csv') and os.path.getsize('products.csv') > 0
     with open('products.csv', 'a', newline="", encoding="utf-8") as f:
@@ -51,6 +72,10 @@ def save_new_product(product_id, date, product, cost, shipping, total):
             f'{total:.2f}'
         ])
 
+# This function collects product information from the user,
+# calculates the total cost, suggests a sale goal,
+# saves the product to the CSV file,
+# and then lets the user say whether the item has already been sold.
 def add_product():
     product_id = next_product_id()
     product = input("What product do you want to add?: ")
@@ -75,6 +100,9 @@ def add_product():
     else:
         print("Ok, go back to the main menu and select option 2 (ADD A SELL).")
 
+# This function loads all products from products.csv.
+# If the file does not exist or is empty, it returns an empty list.
+# Each product is stored as a dictionary.
 def load_product():
     if not os.path.exists('products.csv') or os.path.getsize('products.csv') == 0:
         return []
@@ -95,6 +123,8 @@ def load_sold_id():
                 ids.add(p_id)
         return ids
 
+# This function saves a sold product record into soldproducts.csv.
+# It stores the product ID, the date sold, and the selling price.
 def save_sold_product(product_id, date_sold, sold_for):
     product_id = product_id.strip().upper()
     exists = os.path.exists("soldproducts.csv")
@@ -103,7 +133,13 @@ def save_sold_product(product_id, date_sold, sold_for):
         if not exists:
             writer.writerow(["product_id", "date_sold", "sold_for"])
         writer.writerow([product_id, date_sold, f"{sold_for:.2f}"])
-    
+
+# This function allows the user to record the sale of a product.
+# It loads all products, removes the ones already sold,
+# asks the user which product was sold,
+# calculates profit or loss,
+# saves the sold product data,
+# and then confirms the sale was saved.
 def add_sold_product():
     product = load_product()
     sold_ids = load_sold_id()
@@ -116,7 +152,7 @@ def add_sold_product():
         print(f'{P["product_id"]} - {P["product"]} (Total ${float(P["total"]):.2f})')
     product_id = input("\nPlease type the number ID of the product you sold. (Example: P0001): ").strip().upper()
     products = next((p for p in available if p["product_id"] == product_id), None)
-    if not product:
+    if not products:
         print("Invalid ID or product has already been sold.\n")
     total = float(products["total"])
     sell_for = total * 2
@@ -140,6 +176,9 @@ def add_sold_product():
     save_sold_product(product_id, date_sold, sold_for)
     print("Product sold saved.\n")
 
+# This function lists all products and shows which ones are still pending sale.
+# It loads all products, loads all sold product IDs,
+# compares them, and prints the products that have not been sold yet.
 def list_of_products():
     product = load_product()
     sold_ids = load_sold_id()
@@ -155,8 +194,10 @@ def list_of_products():
 
     print("\nPending products for sell: ")
     for p in pending:
-        print(f"- {p["product_id"]}: {p["product"]} (total ${float(p["total"]):.2f})")
+        print(f'- {p["product_id"]}: {p["product"]} (total ${float(p["total"]):.2f})')
 
+# This is the main control function for the program.
+# It keeps showing the menu until the user chooses to exit.
 def main():
     while True:
         choice = menu()
@@ -169,5 +210,6 @@ def main():
         else:
             print("Exiting program. ")
             quit()
+# This starts the program only when the file is run directly.
 if __name__ == "__main__":
     main()
