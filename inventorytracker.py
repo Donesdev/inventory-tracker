@@ -154,6 +154,7 @@ def add_sold_product():
     products = next((p for p in available if p["product_id"] == product_id), None)
     if not products:
         print("Invalid ID or product has already been sold.\n")
+        return
     total = float(products["total"])
     sell_for = total * 2
     sold_for = get_number("How much did you sell the product for?: ")
@@ -181,7 +182,6 @@ def add_sold_product():
 # compares them, and prints the products that have not been sold yet.
 def list_of_products():
     product = load_product()
-    sold_ids = load_sold_id()
     sold_norm = {v.strip().upper() for v in load_sold_id()}
 
     pending = []
